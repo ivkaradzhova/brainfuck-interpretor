@@ -6,6 +6,8 @@
 {-# OPTIONS_GHC -fwarn-incomplete-uni-patterns #-} -- no incomplete patterns in lambdas!
 {-# LANGUAGE InstanceSigs #-}                      -- allows us to write signatures in instance declarations
 
+import System.IO
+import Data.Char
 
 change :: Int -> [Int] -> (Int -> Int) -> [Int]
 change 0 xs f = [f (xs !! 0)] ++ (tail xs)
@@ -32,7 +34,7 @@ readInstructions instructions input ip dp dataTape
     | instructions !! ip == ',' && input /= [] 
                                 = readInstructions instructions (tail input) (ip + 1)  dp (change dp dataTape (\x -> head input))
     | instructions !! ip == ',' && input == []
-                                =  readInstructions instructions [] (ip + 1)  dp dataTape
+                                =  error ("All of the input has already been read!")--readInstructions instructions [] (ip + 1)  dp dataTape
     | instructions !! ip == '.' = (dataTape !! dp) : (readInstructions instructions input (ip + 1) dp dataTape)
     | instructions !! ip == '[' = if dataTape !! dp == 0
                                   then readInstructions instructions input (ip + (indexAfter ']' (drop ip instructions)))  dp dataTape
@@ -40,10 +42,24 @@ readInstructions instructions input ip dp dataTape
     | instructions !! ip == ']' = if dataTape !! dp == 0
                                   then readInstructions instructions input (ip + 1) dp dataTape       
                                   else readInstructions instructions input (ip - (indexAfter '[' (reverse (take ip instructions))))  dp dataTape     
-    |otherwise = error ("Command '" ++ [instructions !! ip] ++ "' not defined!")
+    |otherwise = readInstructions instructions input (ip + 1) dp dataTape
 
 
 
 brainfuck :: String -> [Int] -> [Int]
 brainfuck instructions input = readInstructions instructions input 0 0 [0,0..]
---main
+
+
+main = do
+    putStr "File Path: "
+    fileName <- getLine
+    contents <- readFile $ "/home/pon/Documents/2.FunctionalProgramming/Brainfuck/" ++ fileName
+    putStr "Input: "
+    input <- getLine
+
+    putStr "Save output in: "
+    outputFile <- getLine
+    writeFile ("/home/pon/Documents/2.FunctionalProgramming/Brainfuck/" ++ outputFile)
+                        $ map intToDigit $ brainfuck contents $ map digitToInt input
+
+
