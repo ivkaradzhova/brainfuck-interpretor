@@ -1,11 +1,4 @@
 
-{-# OPTIONS_GHC -fwarn-incomplete-patterns #-}     -- cover all cases!
-{-# OPTIONS_GHC -fwarn-unused-matches #-}          -- use all your pattern matches!
-{-# OPTIONS_GHC -fwarn-missing-signatures #-}      -- write all your toplevel signatures!
-{-# OPTIONS_GHC -fwarn-name-shadowing #-}          -- use different names!
-{-# OPTIONS_GHC -fwarn-incomplete-uni-patterns #-} -- no incomplete patterns in lambdas!
-{-# LANGUAGE InstanceSigs #-}                      -- allows us to write signatures in instance declarations
-
 import System.IO
 import Data.Char
 
@@ -134,19 +127,18 @@ brainfuckParalel = do
       $ map intToDigit $ paralelOutputGenerator (startingProgram contents1 (map digitToInt input)) (startingProgram contents2 (map digitToInt input))   
 
 
---TODO: the last few digits are not written to the other programs output
 alternateOutputGenerator :: Program -> Program -> [Int]
 alternateOutputGenerator p q 
     | not $ checkBrackets (filter (\x -> x == ']' || x == '[') (instructions p))  = error "Unmatching brackets in the first program!"
     | not $ checkBrackets (filter (\x -> x == ']' || x == '[') (instructions q))  = error "Unmatching brackets in the second program!"
     | (dp p) < 0 = error "Trying to move the data pointer before the first element in the first program!"
-    | (dp q) < 0 = error "Trying to move the data pointer before the first element in the second program!"
+   -- | (dp q) < 0 = error "Trying to move the data pointer before the first element in the second program!"
     
-    | (ip p) >= length (instructions p) && (ip q) >= length (instructions q) = (output q)
-    | (ip p) >= length (instructions p) && (ip q) < length (instructions q) = alternateOutputGenerator p (readInstruction q)
-    | (ip p) < length (instructions p) && (ip q) >= length (instructions q) = alternateOutputGenerator (readInstruction p) q
-    | (instructions p) !! (ip p) == '.' = alternateOutputGenerator (addToOutput ((dataTape p) !! (dp p)) q) (readInstruction p)
-    | otherwise = alternateOutputGenerator (readInstruction p) (readInstruction q)
+    | (ip p) >= length (instructions p) && (ip q) >= length (instructions q) = (output p)
+    | (ip p) >= length (instructions p) && (ip q) < length (instructions q) = alternateOutputGenerator (readInstruction q) p
+   -- | (ip p) < length (instructions p) && (ip q) >= length (instructions q) = alternateOutputGenerator (readInstruction p) q
+    | (instructions p) !! (ip p) == '.' = alternateOutputGenerator (readInstruction (addToOutput ((dataTape p) !! (dp p)) q)) p
+    | otherwise = alternateOutputGenerator (readInstruction p) q
     
 
 brainfuckAlternate = do
